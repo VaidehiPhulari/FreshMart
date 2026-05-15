@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment - FreshMart</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body { background-color: #f4f6f8; }
+        .payment-container {
+            max-width: 500px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            font-family: 'Inter', sans-serif;
+        }
+        .payment-header { text-align: center; margin-bottom: 25px; }
+        .payment-header h2 { margin: 0; color: #333; font-weight: 600; }
+        .payment-amount { font-size: 24px; color: #2e7d32; font-weight: 700; margin-top: 10px; }
+        .form-group { margin-bottom: 15px; position: relative; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; color: #555; font-size: 14px; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #2e7d32;
+            outline: none;
+        }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        .error-msg { color: #d32f2f; font-size: 12px; display: none; margin-top: 4px; }
+        .invalid input { border-color: #d32f2f; }
+        .invalid .error-msg { display: block; }
+        .btn-pay {
+            width: 100%;
+            background: #2e7d32;
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn-pay:hover { background: #1b5e20; }
+        .btn-pay:disabled { background: #81c784; cursor: not-allowed; }
+        
+        /* Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+            margin-left: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="products.html" class="logo">🛒 FreshMart</a>
+    </nav>
+
+    <div class="payment-container">
+        <div class="payment-header">
+            <h2>Secure Checkout</h2>
+            <div class="payment-amount" id="displayAmount">₹0.00</div>
+        </div>
+
+        <form id="paymentForm">
+            <div class="form-group" id="methodGroup">
+                <label for="payMethod">Payment Method</label>
+                <select id="payMethod">
+                    <option value="credit">Credit Card</option>
+                    <option value="debit">Debit Card</option>
+                    <option value="upi">UPI</option>
+                </select>
+            </div>
+
+            <div id="cardFields">
+                <div class="form-group" id="nameGroup">
+                    <label for="cardName">Cardholder Name</label>
+                    <input type="text" id="cardName" placeholder="John Doe">
+                    <div class="error-msg">Please enter valid name</div>
+                </div>
+
+                <div class="form-group" id="numberGroup">
+                    <label for="cardNumber">Card Number</label>
+                    <input type="text" id="cardNumber" placeholder="1234 5678 9101 1121" maxlength="19">
+                    <div class="error-msg">Valid 16-digit card number is required</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" id="expiryGroup">
+                        <label for="expiryDate">Expiry Date (MM/YY)</label>
+                        <input type="text" id="expiryDate" placeholder="MM/YY" maxlength="5">
+                        <div class="error-msg">Valid MM/YY required</div>
+                    </div>
+                    <div class="form-group" id="cvvGroup">
+                        <label for="cvv">CVV</label>
+                        <input type="password" id="cvv" placeholder="***" maxlength="3">
+                        <div class="error-msg">3-digit CVV required</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="upiFields" style="display: none;">
+                <div class="form-group" id="upiGroup">
+                    <label for="upiId">UPI ID</label>
+                    <input type="text" id="upiId" placeholder="username@upi">
+                    <div class="error-msg">Please enter a valid UPI ID</div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-pay" id="payBtn">
+                <span id="payText">Pay Now</span>
+                <div class="spinner" id="spinner"></div>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const amount = localStorage.getItem('paymentAmount') || '₹0.00';
+            document.getElementById('displayAmount').textContent = amount;
+            
+            // Format card number with spaces
+            document.getElementById('cardNumber').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 0) {
+                    value = value.match(/.{1,4}/g).join(' ');
+                }
+                e.target.value = value;
+            });
+
+            // Format expiry date
+            document.getElementById('expiryDate').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                e.target.value = value;
+            });
+            
+            // Toggle form fields based on method
+            document.getElementById('payMethod').addEventListener('change', function(e) {
+                if (e.target.value === 'upi') {
+                    document.getElementById('cardFields').style.display = 'none';
+                    document.getElementById('upiFields').style.display = 'block';
+                } else {
+                    document.getElementById('cardFields').style.display = 'block';
+                    document.getElementById('upiFields').style.display = 'none';
+                }
+            });
+        });
+
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Validation
+            let isValid = true;
+            const payMethod = document.getElementById('payMethod').value;
+            
+            if (payMethod === 'upi') {
+                const upiId = document.getElementById('upiId').value.trim();
+                const upiPattern = /^[a-zA-Z0-9.\-_]+@[a-zA-Z]+$/;
+                if (!upiId || !upiPattern.test(upiId)) {
+                    document.getElementById('upiGroup').classList.add('invalid');
+                    isValid = false;
+                } else { document.getElementById('upiGroup').classList.remove('invalid'); }
+            } else {
+                const name = document.getElementById('cardName').value.trim();
+                const number = document.getElementById('cardNumber').value.replace(/\s/g, '');
+                const expiry = document.getElementById('expiryDate').value;
+                const cvv = document.getElementById('cvv').value;
+
+                if (!name || name.length < 3) {
+                    document.getElementById('nameGroup').classList.add('invalid');
+                    isValid = false;
+                } else { document.getElementById('nameGroup').classList.remove('invalid'); }
+
+                if (!/^\d{16}$/.test(number)) {
+                    document.getElementById('numberGroup').classList.add('invalid');
+                    isValid = false;
+                } else { document.getElementById('numberGroup').classList.remove('invalid'); }
+
+                if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+                    document.getElementById('expiryGroup').classList.add('invalid');
+                    isValid = false;
+                } else { document.getElementById('expiryGroup').classList.remove('invalid'); }
+
+                if (!/^\d{3}$/.test(cvv)) {
+                    document.getElementById('cvvGroup').classList.add('invalid');
+                    isValid = false;
+                } else { document.getElementById('cvvGroup').classList.remove('invalid'); }
+            }
+
+            if (!isValid) return;
+
+            // Show loading
+            const btn = document.getElementById('payBtn');
+            const spinner = document.getElementById('spinner');
+            const payText = document.getElementById('payText');
+            
+            btn.disabled = true;
+            payText.textContent = 'Processing...';
+            spinner.style.display = 'block';
+
+            // Simulate server request
+            setTimeout(async () => {
+                try {
+                    const response = await fetch('/api/payment/process', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            method: payMethod,
+                            amount: localStorage.getItem('paymentAmount')
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        localStorage.setItem('paymentSuccessData', JSON.stringify({
+                            orderId: result.orderId,
+                            amount: localStorage.getItem('paymentAmount'),
+                            date: new Date().toLocaleString()
+                        }));
+                        window.location.href = 'success.html';
+                    }
+                } catch (err) {
+                    btn.disabled = false;
+                    payText.textContent = 'Pay Now';
+                    spinner.style.display = 'none';
+                    alert('Payment failed. Please try again.');
+                }
+            }, 2500); // 2.5s spinner
+        });
+    </script>
+</body>
+</html>

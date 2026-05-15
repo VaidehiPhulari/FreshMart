@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart - FreshMart</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="products.html" class="logo">🛒 FreshMart</a>
+        <ul class="nav-links">
+            <li><a href="products.html">Continue Shopping</a></li>
+            <li><button class="btn-logout" onclick="logout()">Logout</button></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">Your Cart</h1>
+        
+        <div class="cart-layout">
+            <div class="cart-items" id="cartItems">
+                <p>Loading cart...</p>
+            </div>
+            
+            <div class="cart-summary">
+                <h3 class="summary-title">Order Summary</h3>
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="subtotal">₹0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (8%)</span>
+                    <span id="tax">₹0.00</span>
+                </div>
+                <div class="summary-total">
+                    <span>Total</span>
+                    <span id="cartTotal">₹0.00</span>
+                </div>
+                <button class="btn btn-checkout" id="checkoutBtn" disabled style="display: none;">Proceed to Checkout</button>
+                <button class="btn btn-checkout" id="paymentBtn" style="background-color: #2e7d32; margin-top: 10px; color: white;" onclick="proceedToPayment()">Proceed to Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function proceedToPayment() {
+            const totalText = document.getElementById('cartTotal').innerText;
+            if(totalText !== "₹0.00") {
+                localStorage.setItem('paymentAmount', totalText);
+                window.location.href = 'payment.html';
+            } else {
+                alert("Cart is empty");
+            }
+        }
+    </script>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

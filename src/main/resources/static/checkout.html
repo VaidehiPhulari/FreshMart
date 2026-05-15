@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Success - FreshMart</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .checkout-success {
+            text-align: center;
+            background: white;
+            padding: 4rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 4rem auto;
+        }
+        .success-icon {
+            font-size: 5rem;
+            color: #2e7d32;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="products.html" class="logo">🛒 FreshMart</a>
+        <ul class="nav-links">
+            <li><a href="products.html">Home</a></li>
+            <li><button class="btn-logout" onclick="logout()">Logout</button></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="checkout-success">
+            <div class="success-icon">✅</div>
+            <h1 style="margin-bottom: 1rem; color: #2e7d32;">Payment Successful!</h1>
+            <p style="font-size: 1.1rem; color: #555; margin-bottom: 2rem;">
+                Thank you for your purchase. Your groceries will be delivered soon!
+            </p>
+            <a href="products.html" class="btn" style="display: inline-block; text-decoration: none; max-width: 200px;">Continue Shopping</a>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
